@@ -369,11 +369,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-env-changed=CFLAGS");
 
     // Ditto for source files, though these shouldn't change as often.
-    for file in std::fs::read_dir("c")? {
-        println!(
-            "cargo:rerun-if-changed={}",
-            file?.path().to_str().expect("utf-8")
-        );
+    if !is_pure() {
+        for file in std::fs::read_dir("c")? {
+            println!(
+                "cargo:rerun-if-changed={}",
+                file?.path().to_str().expect("utf-8")
+            );
+        }
     }
 
     // When compiling with clang-cl for windows, it adds .asm files to the root
