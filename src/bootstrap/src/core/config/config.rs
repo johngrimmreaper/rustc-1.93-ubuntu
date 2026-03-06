@@ -737,7 +737,6 @@ impl Config {
         };
 
         let initial_rustc = build_rustc.unwrap_or_else(|| {
-            download_beta_toolchain(&dwn_ctx, &out);
             default_stage0_rustc_path(&out)
         });
 
@@ -751,7 +750,6 @@ impl Config {
         ));
 
         let initial_cargo = build_cargo.unwrap_or_else(|| {
-            download_beta_toolchain(&dwn_ctx, &out);
             initial_sysroot.join("bin").join(exe("cargo", host_target))
         });
 
