@@ -983,7 +983,8 @@ impl Step for Enzyme {
             .define("LLVM_ENABLE_ASSERTIONS", "ON")
             .define("ENZYME_EXTERNAL_SHARED_LIB", "ON")
             .define("ENZYME_BC_LOADER", "OFF")
-            .define("LLVM_DIR", builder.llvm_out(target));
+            .define("LLVM_DIR", "/usr/lib/llvm-21")
+            .define("CMAKE_SKIP_RPATH", "ON");
 
         cfg.build();
 
