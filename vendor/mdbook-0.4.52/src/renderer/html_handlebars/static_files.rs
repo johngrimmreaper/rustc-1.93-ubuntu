@@ -5,12 +5,13 @@ use log::{debug, warn};
 use crate::config::HtmlConfig;
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers::resources::ResourceHelper;
-use crate::theme::{self, playground_editor, Theme};
+use crate::theme::{self, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::{self, File};
+use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
@@ -59,72 +60,8 @@ impl StaticFiles {
         if let Some(contents) = &theme.favicon_svg {
             this.add_builtin("favicon.svg", contents);
         }
-        this.add_builtin("highlight.css", &theme.highlight_css);
         this.add_builtin("tomorrow-night.css", &theme.tomorrow_night_css);
         this.add_builtin("ayu-highlight.css", &theme.ayu_highlight_css);
-        this.add_builtin("highlight.js", &theme.highlight_js);
-        this.add_builtin("clipboard.min.js", &theme.clipboard_js);
-        this.add_builtin("FontAwesome/css/font-awesome.css", theme::FONT_AWESOME);
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.eot",
-            theme::FONT_AWESOME_EOT,
-        );
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.svg",
-            theme::FONT_AWESOME_SVG,
-        );
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.ttf",
-            theme::FONT_AWESOME_TTF,
-        );
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.woff",
-            theme::FONT_AWESOME_WOFF,
-        );
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.woff2",
-            theme::FONT_AWESOME_WOFF2,
-        );
-        this.add_builtin("FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF);
-        if html_config.copy_fonts && theme.fonts_css.is_none() {
-            this.add_builtin("fonts/fonts.css", theme::fonts::CSS);
-            for (file_name, contents) in theme::fonts::LICENSES.iter() {
-                this.add_builtin(file_name, contents);
-            }
-            for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
-                this.add_builtin(file_name, contents);
-            }
-            this.add_builtin(
-                theme::fonts::SOURCE_CODE_PRO.0,
-                theme::fonts::SOURCE_CODE_PRO.1,
-            );
-        } else if let Some(fonts_css) = &theme.fonts_css {
-            if !fonts_css.is_empty() {
-                this.add_builtin("fonts/fonts.css", fonts_css);
-            }
-        }
-        if !html_config.copy_fonts && theme.fonts_css.is_none() {
-            warn!(
-                "output.html.copy-fonts is deprecated.\n\
-                This book appears to have copy-fonts=false in book.toml without a fonts.css file.\n\
-                Add an empty `theme/fonts/fonts.css` file to squelch this warning."
-            );
-        }
-
-        let playground_config = &html_config.playground;
-
-        // Ace is a very large dependency, so only load it when requested
-        if playground_config.editable && playground_config.copy_js {
-            // Load the editor
-            this.add_builtin("editor.js", playground_editor::JS);
-            this.add_builtin("ace.js", playground_editor::ACE_JS);
-            this.add_builtin("mode-rust.js", playground_editor::MODE_RUST_JS);
-            this.add_builtin("theme-dawn.js", playground_editor::THEME_DAWN_JS);
-            this.add_builtin(
-                "theme-tomorrow_night.js",
-                playground_editor::THEME_TOMORROW_NIGHT_JS,
-            );
-        }
 
         let custom_files = html_config
             .additional_css
@@ -140,18 +77,6 @@ impl StaticFiles {
                     .to_str()
                     .with_context(|| "resource file names must be valid utf8")?
                     .to_owned(),
-            });
-        }
-
-        for input_location in theme.font_files.iter().cloned() {
-            let filename = Path::new("fonts")
-                .join(input_location.file_name().unwrap())
-                .to_str()
-                .with_context(|| "resource file names must be valid utf8")?
-                .to_owned();
-            this.static_files.push(StaticFile::Additional {
-                input_location,
-                filename,
             });
         }
 
@@ -292,6 +217,29 @@ impl StaticFiles {
                 }
             }
         }
+
+        // Manually symlink files from stripped embedded libs
+        symlink(
+            "/usr/share/fonts-font-awesome/css/font-awesome.min.css",
+            destination.join("css/font-awesome.min.css"),
+        )?;
+        symlink(
+            "/usr/share/fonts-font-awesome/fonts",
+            destination.join("fonts"),
+        )?;
+        symlink(
+            "/usr/share/javascript/highlight.js/styles/atelier-dune-light.css",
+            destination.join("highlight.css"),
+        )?;
+        symlink(
+            "/usr/share/javascript/highlight.js/highlight.js",
+            destination.join("highlight.js"),
+        )?;
+        symlink(
+            "/usr/share/javascript/mathjax/MathJax.js",
+            destination.join("MathJax.js"),
+        )?;
+
         let hash_map = self.hash_map;
         Ok(ResourceHelper { hash_map })
     }
