@@ -367,6 +367,10 @@ impl Checker {
                         return;
                     }
                 }
+                if url.contains("../../cargo/book/") {
+                    // link to related cargo-doc, ok for our Debian build
+                    return;
+                }
                 if is_exception(file, &target_pretty_path) {
                     report.links_ignored_exception += 1;
                 } else {
