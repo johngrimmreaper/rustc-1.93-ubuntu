@@ -72,10 +72,6 @@ import os.path
 import shutil
 import subprocess
 import sys
-import json
-import tomllib
-import re
-import textwrap
 
 FLAGS = "CFLAGS CXXFLAGS CPPFLAGS LDFLAGS"
 ARCHES = "DEB_HOST_GNU_TYPE DEB_HOST_RUST_TYPE"
@@ -93,19 +89,20 @@ def sourcepath(p=None):
 
 def check_enable_cargo_auditable(cargo_home):
     enable_flag = os.getenv("UBUNTU_ENABLE_CARGO_AUDITABLE")
+    if enable_flag not in ("0", "false", "1", "true"):
+        raise ValueError(f"UBUNTU_ENABLE_CARGO_AUDITABLE should be 0, false, 1, or true (got {enable_flag!r})")
+
     try_enable = None
-    if enable_flag == "1" or enable_flag == "true":
-        try_enable = True
-    elif enable_flag == "0" or enable_flag == "false":
+    if enable_flag in ("0", "false"):
         try_enable = False
-    elif enable_flag is None:
+    elif enable_flag in ("1", "true"):
+        try_enable = True
+    else:
         # Currently, we opt IN, so none == false
         log("UBUNTU_ENABLE_CARGO_AUDITABLE was unset, do not try to use it")
         try_enable = False
-    else:
-        raise ValueError(f"UBUNTU_ENABLE_CARGO_AUDITABLE should be 1, true, 0, or false (got {enable_flag!r})")
 
-    if not enable_flag:
+    if not try_enable:
         return False
 
     cargo_audit_loc = "/usr/bin/cargo-auditable"
@@ -114,131 +111,6 @@ def check_enable_cargo_auditable(cargo_home):
         return True
     else:
         raise ValueError(f"Requested UBUNTU_ENABLE_CARGO_AUDITABLE, but could not find {cargo_audit_loc}!")
-
-# Return a list of three-tuples: `(name, version_requirement, [feature-flags])`
-def get_dev_dependencies():
-    # --no-deps means don't *examine* this package's dependencies.
-    # it still outputs the dependencies of *this* package.
-    cargo_metadata = logrun(
-            ["/usr/lib/rust-@RUST_VERSION@/bin/cargo", "metadata", "--no-deps", "--format-version=1", "--offline"],
-            cwd=sourcepath(), stdout=subprocess.PIPE
-    )
-    metadata_json = cargo_metadata.stdout.decode('utf-8')
-    metadata = json.loads(metadata_json)
-    out = []
-    for pkg in metadata["packages"]:
-        for dep in pkg["dependencies"]:
-            if dep["kind"] == "dev":
-                out.append((dep["name"], dep["req"], dep["features"]))
-    return out
-
-def version_req_to_decl(version):
-    # The version *requirement* of the top-level package does not need to be a full semver string,
-    # but the version *declaration* of the fake package does.
-    # [dependencies] libfoobar = "^1.0" --> [libfoobar] version = "1.0.0"
-    # See here for the requirement syntax: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#version-requirement-syntax
-    # In general this is a really hard problem. I have tested this code on all of the ~40,000 version requirement strings
-    # on crates.io, and it fails to generate a working string on 77 of them.
-    # That's good enough for me. If it becomes a problem, use a d/patch to make the version req
-    # less horrible.
-
-    num_re = r"(\d+|~|\*)"
-    # Match an allowed leading character, some spaces, then "num(.num(.num))"
-    # Use ?: to avoid capturing the groups used to indicate "up to 3 dot separated components"
-    whole_re = fr"(<|<=|=|>=|>|\^|~)?\s*{num_re}(?:\.{num_re}(?:\.{num_re})?)?"
-
-    # only consider the first version string.
-    # please, nobody make a req like ">=1.0, >=2.0"
-    req = version.split(",")[0].strip()
-    matched = re.match(whole_re, req)
-    if matched is None:
-        raise ValueError(f"invalid version req {version!r}")
-
-    # remember, matched[0] is the entire match
-    leader = matched[1]
-    pre_info = matched.string[matched.end(0):]
-
-    nums_out = []
-    for i in range(3):
-        # skip 0-index (entire match) and leader
-        num = matched[i + 2]
-        if num == "*" or num is None:
-            nums_out.append(0)
-        else:
-            nums_out.append(int(num))
-    # Usually, the version string indicated after the leader works as a dependency
-    # (once missing components are filled in).
-    # The edge cases are `>` and `<`
-    # We don't need to do advanced checking to see if the version range requested is impossible
-    # because Cargo would complain anyways.
-    # What these mean precisely is largely undocumented, but it looks like
-    # they want the rightmost non-zero component incremented or decremented
-    if leader == ">" or leader == "<":
-        # Find the index of the rightmost non-zero component
-        for i in reversed(range(3)):
-            if nums_out[i] != 0:
-                twiddle = 1 if leader == ">" else -1
-                nums_out[i] += twiddle
-                break
-
-    return ".".join(str(i) for i in nums_out) + pre_info
-
-def create_dev_dependencies_stubs(cargo_config):
-    # cargo-auditable uses cargo-metadata to get the list of crates used in the build,
-    # but it doesn't filter out dev-dependencies currently.
-    # When it tries to get the metadata for dev-deps, it fails because the package isn't there
-    # (because it's only supposed to be there in dev configurations).
-    # This is a Cargo-internal issue.
-    # As a workaround, create fake stub packages.
-    # See: https://github.com/rust-secure-code/cargo-auditable/issues/128
-    # Thank you Shnatsel for all your help
-
-    dev_deps = get_dev_dependencies()
-    log(f"Found dev-dependencies: {dev_deps}")
-
-    # Exfiltrate dh-cargo-deps path, as written to cargo config toml in prepare_debian
-    # This way we know where to write the new package.
-    with open(cargo_config, "rb") as f:
-        toml = tomllib.load(f)
-        registry_path = toml["source"]["dh-cargo-registry"]["directory"]
-
-    for (pkg, ver, features) in dev_deps:
-        full_version_string = version_req_to_decl(ver)
-        fake_pkg_path = f"{registry_path}/{pkg}-{full_version_string}"
-        log(f"have dev-dependency {pkg} = {ver}; checking '{fake_pkg_path}' to spoof dev dependency?")
-        if os.path.exists(fake_pkg_path):
-            log("^^ already exists, skipping")
-        else:
-            os.makedirs(fake_pkg_path, exist_ok=False)
-            # a minimal package requires:
-            # - Cargo.toml
-            # - a src/lib.rs or src/main.rs
-            # - a .cargo-checksum.json, although it can be empty --
-            #   apparently it will be required to be populated at some point,
-            #   but I am hoping that native SBOM support ships before then ;')
-
-            # Cargo doesn't care about `+etc` versions, so append this to make it very clear
-            # that this is not a real package
-            hint_version_string = full_version_string + "+ubuntu-stub"
-            # The native Python toml library doesn't support writing,
-            # so I have to format the toml myself.
-            package_section = textwrap.dedent(f"""\
-                [package]
-                name = {repr(pkg)}
-                version = {repr(hint_version_string)}
-                description = "[UBUNTU] Stub version of {pkg} to spoof dev dependency" """)
-            # [features]
-            # foo = []
-            # bar = []
-            features_entries = "\n".join(f"{feature_name} = []" for feature_name in features)
-            with open(fake_pkg_path + "/Cargo.toml", "w") as f:
-                f.write(package_section + "\n\n[features]\n" + features_entries)
-
-            os.makedirs(fake_pkg_path + "/src")
-            open(fake_pkg_path + "/src/lib.rs", "x").close()
-            with open(fake_pkg_path + "/.cargo-checksum.json", "x") as f:
-                f.write('{ "files": {} }')
-            log(f"^^ created stub package {pkg} @ {full_version_string}")
 
 def prepare_debian(cargo_home, registry, cratespec, host_gnu_type, ldflags, link_from_system, extra_rustflags):
     registry_path = sourcepath(registry)
@@ -277,14 +149,21 @@ def prepare_debian(cargo_home, registry, cratespec, host_gnu_type, ldflags, link
 
     os.makedirs(cargo_home, exist_ok=True)
     with open("%s/config.toml" % cargo_home, "w") as fp:
+        # Enable Cargo's sbom feature flag, then enable building with sbom.
+        # See: https://github.com/rust-secure-code/cargo-auditable?tab=readme-ov-file#on-nightly-rust
+        # and: https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#sbom
         fp.write("""[source.crates-io]
 replace-with = "dh-cargo-registry"
 
 [source.dh-cargo-registry]
 directory = "{0}"
 
+[unstable]
+sbom = true
+
 [build]
 rustflags = {1}
+sbom = true
 
 [profile.release]
 debug = true
@@ -376,7 +255,11 @@ def main(*args):
 
     newargs = []
     if enable_cargo_auditable:
-        newargs.append("auditable")
+        # Turn on Cargo's native sbom support, which cargo-auditable knows how to read.
+        # The ability to use this flag is in the config.toml created by prepare_debian.
+        # The ability to use -Z flags at all on "stable Rust" is by
+        # d/p/d-0012-cargo-always-return-dev-channel.patch, I THINK.
+        newargs.extend(["auditable", "-Zsbom"])
     subcmd = None
     for a in args:
         if (subcmd is None) and (a in ("build", "rustc", "doc", "test", "bench", "install")):
@@ -411,9 +294,6 @@ def main(*args):
     cargo_config = "%s/config.toml" % cargo_home
     if not os.path.exists(cargo_config):
         raise ValueError("does not exist: %s, did you run `cargo prepare-debian <registry>`?" % cargo_config)
-
-    if enable_cargo_auditable and (subcmd == "build" or subcmd == "install"):
-        create_dev_dependencies_stubs(cargo_config)
 
     if subcmd == "install":
         return install(os.getenv("DESTDIR", ""),

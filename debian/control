@@ -337,9 +337,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
          rustc-1.93 (= ${binary:Version})
           | rustc (= ${binary:Version}),
          binutils,
-         gcc | clang | c-compiler,
-         cargo-auditable
-Suggests: cargo-1.93-doc, python3
+         gcc | clang | c-compiler
+Suggests: cargo-1.93-doc, python3, cargo-auditable
 Description: Rust package manager
  Cargo is a tool that allows Rust projects to declare their various
  dependencies, and ensure that you'll always get a repeatable build.

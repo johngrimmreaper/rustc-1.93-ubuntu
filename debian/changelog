@@ -1,3 +1,14 @@
+rustc-1.93 (1.93.1+dfsg-0ubuntu2) resolute; urgency=medium
+
+  [ Petrichor Park ]
+  * d/bin/cargo.in: Use -Zsbom to help cargo-auditable ignore dev-dependencies
+    - LP: #2143339
+
+  [ Max Gilmour ]
+  * d/control: Move cargo-auditable dependency to Suggests (LP: #2143935)
+
+ -- Petrichor Park <petrichor.park@canonical.com>  Fri, 06 Mar 2026 15:28:56 -0600
+
 rustc-1.93 (1.93.1+dfsg-0ubuntu1) resolute; urgency=medium
 
   * New upstream version 1.93.1 (LP: #2138660)
