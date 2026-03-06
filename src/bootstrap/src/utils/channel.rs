@@ -36,8 +36,13 @@ pub struct Info {
 
 impl GitInfo {
     pub fn new(omit_git_hash: bool, dir: &Path, exec_ctx: impl AsRef<ExecutionContext>) -> GitInfo {
+        //
+        // Debian: returning early because the Debian package is also in a git
+        //         repository, but we don't want to parse gitinfo. This is
+        //         needed for the bootstrap tests to work which running for
+        //         Debian git.
         // See if this even begins to look like a git dir
-        if !dir.join(".git").exists() {
+        if true {
             match read_commit_info_file(dir) {
                 Some(info) => return GitInfo::RecordedForTarball(info),
                 None => return GitInfo::Absent,
