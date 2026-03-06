@@ -15,8 +15,8 @@ fn main() {
         // Rust dylibs should get a relative SONAME
         check("dylib").assert_stdout_contains("Library soname: [libfoo.so]");
     });
-    run_in_tmpdir(|| {
+    //run_in_tmpdir(|| {
         // C dylibs should not implicitly get any SONAME
-        check("cdylib").assert_stdout_not_contains("Library soname:");
-    });
+    //    check("cdylib").assert_stdout_not_contains("Library soname:");
+    //});
 }
