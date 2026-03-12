@@ -5,8 +5,8 @@ use crate::spec::{Arch, SanitizerSet, StackProbeType, Target, TargetMetadata, ba
 pub(crate) fn target() -> Target {
     let mut base = base::linux_gnu::opts();
     base.endian = Endian::Big;
-    // z10 is the oldest CPU supported by LLVM
-    base.cpu = "z10".into();
+    // LP: #2126577 Set Architecture Level (ALS) to z15
+    base.cpu = "z15".into();
     base.max_atomic_width = Some(128);
     base.min_global_align = Some(Align::from_bits(16).unwrap());
     base.stack_probes = StackProbeType::Inline;
