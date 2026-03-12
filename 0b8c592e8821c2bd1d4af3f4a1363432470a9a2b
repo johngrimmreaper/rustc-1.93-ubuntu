@@ -1,0 +1,5 @@
+  [ Petrichor Park ]
+  * d/bin/cargo.in: Use -Zsbom to help cargo-auditable ignore dev-dependencies
+    - LP: #2143339
+  [ Max Gilmour ]
+  * d/control: Move cargo-auditable dependency to Suggests (LP: #2143935)
