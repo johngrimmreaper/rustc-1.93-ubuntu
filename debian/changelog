@@ -1,3 +1,10 @@
+rustc-1.93 (1.93.1+dfsg-0ubuntu3) resolute; urgency=medium
+
+  * d/bin/cargo.in: Handle if UBUNTU_ENABLE_CARGO_AUDITABLE is unset
+    (LP: #2144045)
+
+ -- Petrichor Park <petrichor.park@canonical.com>  Thu, 12 Mar 2026 13:45:45 -0500
+
 rustc-1.93 (1.93.1+dfsg-0ubuntu2) resolute; urgency=medium
 
   [ Petrichor Park ]

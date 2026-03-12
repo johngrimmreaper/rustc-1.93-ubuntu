@@ -89,18 +89,18 @@ def sourcepath(p=None):
 
 def check_enable_cargo_auditable(cargo_home):
     enable_flag = os.getenv("UBUNTU_ENABLE_CARGO_AUDITABLE")
-    if enable_flag not in ("0", "false", "1", "true"):
-        raise ValueError(f"UBUNTU_ENABLE_CARGO_AUDITABLE should be 0, false, 1, or true (got {enable_flag!r})")
 
     try_enable = None
     if enable_flag in ("0", "false"):
         try_enable = False
     elif enable_flag in ("1", "true"):
         try_enable = True
-    else:
+    elif enable_flag is None:
         # Currently, we opt IN, so none == false
         log("UBUNTU_ENABLE_CARGO_AUDITABLE was unset, do not try to use it")
         try_enable = False
+    else:
+        raise ValueError(f"UBUNTU_ENABLE_CARGO_AUDITABLE should be 0, false, 1, or true (got {enable_flag!r})")
 
     if not try_enable:
         return False
