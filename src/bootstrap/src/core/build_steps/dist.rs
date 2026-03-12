@@ -91,6 +91,7 @@ impl Step for Docs {
         tarball.add_bulk_dir(builder.doc_out(host), dest);
         tarball.add_file(builder.src.join("src/doc/robots.txt"), dest, FileType::Regular);
         tarball.add_file(builder.src.join("src/doc/sitemap.txt"), dest, FileType::Regular);
+        tarball.permit_symlinks(true);
         Some(tarball.generate())
     }
 
