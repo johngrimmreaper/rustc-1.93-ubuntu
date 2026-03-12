@@ -10,7 +10,7 @@ assert-attribute-false: ("#main-content > details.top-doc", {"open": ""})
 assert-text: ("#toggle-all-docs", "Show all")
 assert-css: (
     "#main-content > details.top-doc > summary",
-    {"font-family": '"Fira Sans", Arial, NanumBarunGothic, sans-serif'},
+    {"font-family": '"Fira Sans", Arial, sans-serif'},
 )
 click: "#toggle-all-docs"
 // Not collapsed anymore so the "open" attribute should be back.
