@@ -610,11 +610,15 @@ install_components() {
 
             maybe_backup_path "$_file_install_path"
 
-            run cp "$_src_dir/$_component/$_file" "$_file_install_path"
-            if $_is_bin || test -x "$_src_dir/$_component/$_file"; then
-                run chmod 755 "$_file_install_path"
+            if [ -h "$_src_dir/$_component/$_file" ]; then
+                run cp -d "$_src_dir/$_component/$_file" "$_file_install_path"
             else
-                run chmod 644 "$_file_install_path"
+                run cp "$_src_dir/$_component/$_file" "$_file_install_path"
+                if $_is_bin || test -x "$_src_dir/$_component/$_file"; then
+                    run chmod 755 "$_file_install_path"
+                else
+                    run chmod 644 "$_file_install_path"
+                fi
             fi
             critical_need_ok "file creation failed"
 
@@ -630,7 +634,7 @@ install_components() {
 
             maybe_backup_path "$_file_install_path"
 
-            run cp -R "$_src_dir/$_component/$_file" "$_file_install_path"
+            run cp -dR "$_src_dir/$_component/$_file" "$_file_install_path"
             critical_need_ok "failed to copy directory"
 
                     # Set permissions. 0755 for dirs, 644 for files
