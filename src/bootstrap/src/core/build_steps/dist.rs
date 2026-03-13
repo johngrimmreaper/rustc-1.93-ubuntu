@@ -1312,7 +1312,10 @@ impl Step for PlainSourceTarball {
         write_git_info(builder.rust_info().info(), plain_dst_src);
         write_git_info(builder.cargo_info.info(), &plain_dst_src.join("./src/tools/cargo"));
 
-        if builder.config.dist_vendor {
+        //
+        // Debian: short-circuited because the Debian package is also in a git
+        //         repository, but cargo-vendor should not be installed or run.
+        if false {
             builder.require_and_update_all_submodules();
 
             // Vendor packages that are required by opt-dist to collect PGO profiles.
