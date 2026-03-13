@@ -77,12 +77,6 @@ paths.workspace = true
 
 ra-ap-rustc_type_ir.workspace = true
 
-[target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.60", features = [
-  "Win32_System_Diagnostics_Debug",
-  "Win32_System_Threading",
-] }
-
 [dev-dependencies]
 expect-test = "1.5.1"
 xshell.workspace = true

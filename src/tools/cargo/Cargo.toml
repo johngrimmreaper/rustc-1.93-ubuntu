@@ -2,7 +2,9 @@
 resolver = "2"
 members = [
   "crates/*",
-  "credential/*",
+  "credential/cargo-credential",
+  "credential/cargo-credential-1password",
+  "credential/cargo-credential-libsecret",
   "benches/benchsuite",
   "benches/capture",
 ]
@@ -28,8 +30,6 @@ build-rs = { version = "0.3.1", path = "crates/build-rs" }
 cargo = { path = "" }
 cargo-credential = { version = "0.4.2", path = "credential/cargo-credential" }
 cargo-credential-libsecret = { version = "0.5.4", path = "credential/cargo-credential-libsecret" }
-cargo-credential-macos-keychain = { version = "0.4.19", path = "credential/cargo-credential-macos-keychain" }
-cargo-credential-wincred = { version = "0.4.19", path = "credential/cargo-credential-wincred" }
 cargo-platform = { path = "crates/cargo-platform", version = "0.3.0" }
 cargo-test-macro = { version = "0.4.8", path = "crates/cargo-test-macro" }
 cargo-test-support = { version = "0.9.1", path = "crates/cargo-test-support" }
@@ -39,7 +39,6 @@ cargo_metadata = "0.23.1"
 clap = "4.5.53"
 clap_complete = { version = "4.5.61", features = ["unstable-dynamic"] }
 color-print = "0.3.7"
-core-foundation = { version = "0.10.1", features = ["mac_os_10_7_support"] }
 crates-io = { version = "0.40.16", path = "crates/crates-io" }
 criterion = { version = "0.7.0", features = ["html_reports"] }
 curl = "0.4.49"
@@ -70,7 +69,6 @@ libgit2-sys = "0.18.2"
 libloading = "0.8.9"
 memchr = "2.7.6"
 memfd = "0.6.5"
-miow = "0.6.1"
 opener = "0.8.3"
 openssl = "0.10.75"
 openssl-sys = "0.9.111"
@@ -119,7 +117,6 @@ unicode-width = "0.2.2"
 url = "2.5.7"
 varisat = "0.2.2"
 walkdir = "2.5.0"
-windows-sys = "0.61"
 winnow = "0.7.14"
 
 [workspace.lints.rust]
@@ -162,6 +159,7 @@ anyhow.workspace = true
 base64.workspace = true
 blake3.workspace = true
 cargo-credential.workspace = true
+cargo-credential-libsecret.workspace = true
 cargo-platform.workspace = true
 cargo-util-schemas.workspace = true
 cargo-util.workspace = true
@@ -233,26 +231,8 @@ libc.workspace = true
 [target.'cfg(target_os = "linux")'.dependencies]
 cargo-credential-libsecret.workspace = true
 
-[target.'cfg(target_os = "macos")'.dependencies]
-cargo-credential-macos-keychain.workspace = true
-
 [target.'cfg(not(windows))'.dependencies]
 openssl = { workspace = true, optional = true }
-
-[target.'cfg(windows)'.dependencies]
-cargo-credential-wincred.workspace = true
-
-[target.'cfg(windows)'.dependencies.windows-sys]
-workspace = true
-features = [
-  "Win32_Foundation",
-  "Win32_Security",
-  "Win32_Storage_FileSystem",
-  "Win32_System_IO",
-  "Win32_System_Console",
-  "Win32_System_JobObjects",
-  "Win32_System_Threading",
-]
 
 [dev-dependencies]
 annotate-snippets = { workspace = true, features = ["testing-colors"] }
