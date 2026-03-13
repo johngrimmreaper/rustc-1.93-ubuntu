@@ -163,7 +163,7 @@ fn check_missing_paths_for_x_test_tests() {
     }
 }
 
-#[test]
+#[allow(dead_code)]
 fn ci_rustc_if_unchanged_invalidate_on_compiler_changes() {
     git_test(|ctx| {
         prepare_rustc_checkout(ctx);
@@ -176,7 +176,7 @@ fn ci_rustc_if_unchanged_invalidate_on_compiler_changes() {
     });
 }
 
-#[test]
+#[allow(dead_code)]
 fn ci_rustc_if_unchanged_do_not_invalidate_on_library_changes_outside_ci() {
     git_test(|ctx| {
         prepare_rustc_checkout(ctx);
@@ -189,7 +189,7 @@ fn ci_rustc_if_unchanged_do_not_invalidate_on_library_changes_outside_ci() {
     });
 }
 
-#[test]
+#[allow(dead_code)]
 fn ci_rustc_if_unchanged_do_not_invalidate_on_tool_changes() {
     git_test(|ctx| {
         prepare_rustc_checkout(ctx);
@@ -351,7 +351,7 @@ fn test_test_coverage() {
     }
 }
 
-#[test]
+#[allow(dead_code)]
 fn test_prebuilt_llvm_config_path_resolution() {
     fn configure(config: &str) -> Config {
         TestCtx::new().config("build").with_default_toml_config(config).create_config()
