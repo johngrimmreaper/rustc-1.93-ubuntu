@@ -83,9 +83,6 @@ windows-sys = { version = "0.60", features = [
   "Win32_System_Threading",
 ] }
 
-[target.'cfg(not(target_env = "msvc"))'.dependencies]
-jemallocator = { version = "0.5.4", package = "tikv-jemallocator", optional = true }
-
 [dev-dependencies]
 expect-test = "1.5.1"
 xshell.workspace = true
@@ -95,7 +92,7 @@ test-fixture.workspace = true
 syntax-bridge.workspace = true
 
 [features]
-jemalloc = ["jemallocator", "profile/jemalloc"]
+jemalloc = []
 force-always-assert = ["stdx/force-always-assert"]
 in-rust-tree = [
   "syntax/in-rust-tree",
