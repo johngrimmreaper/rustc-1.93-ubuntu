@@ -112,7 +112,7 @@ def check_enable_cargo_auditable(cargo_home):
     else:
         raise ValueError(f"Requested UBUNTU_ENABLE_CARGO_AUDITABLE, but could not find {cargo_audit_loc}!")
 
-def prepare_debian(cargo_home, registry, cratespec, host_gnu_type, ldflags, link_from_system, extra_rustflags):
+def prepare_debian(cargo_home, registry, cratespec, host_gnu_type, ldflags, link_from_system, extra_rustflags, enable_cargo_auditable):
     registry_path = sourcepath(registry)
     if link_from_system:
         log("linking %s/* into %s/" % (SYSTEM_REGISTRY, registry_path))
@@ -149,25 +149,27 @@ def prepare_debian(cargo_home, registry, cratespec, host_gnu_type, ldflags, link
 
     os.makedirs(cargo_home, exist_ok=True)
     with open("%s/config.toml" % cargo_home, "w") as fp:
-        # Enable Cargo's sbom feature flag, then enable building with sbom.
+        # Conditionally enable Cargo's sbom feature flag and building with sbom,
+        # only when cargo-auditable is enabled.
         # See: https://github.com/rust-secure-code/cargo-auditable?tab=readme-ov-file#on-nightly-rust
         # and: https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#sbom
-        fp.write("""[source.crates-io]
+        sbom_flag = str(enable_cargo_auditable).lower()
+        fp.write(f"""[source.crates-io]
 replace-with = "dh-cargo-registry"
 
 [source.dh-cargo-registry]
-directory = "{0}"
+directory = "{registry_path}"
 
 [unstable]
-sbom = true
+sbom = {sbom_flag}
 
 [build]
-rustflags = {1}
-sbom = true
+rustflags = {repr(rustflags)}
+sbom = {sbom_flag}
 
 [profile.release]
 debug = true
-""".format(registry_path, repr(rustflags)))
+""")
 
     return 0
 
@@ -251,7 +253,8 @@ def main(*args):
             link_from_system = True
         return prepare_debian(cargo_home, registry,
             os.environ["DEB_CARGO_CRATE"], host_gnu_type,
-            os.getenv("LDFLAGS", "").split(), link_from_system, extra_rustflags)
+            os.getenv("LDFLAGS", "").split(), link_from_system, extra_rustflags,
+            enable_cargo_auditable)
 
     newargs = []
     if enable_cargo_auditable:

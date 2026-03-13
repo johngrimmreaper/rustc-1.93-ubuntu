@@ -1,3 +1,9 @@
+rustc-1.93 (1.93.1+dfsg-0ubuntu4) resolute; urgency=medium
+
+  * d/b/cargo.in: Only generate sboms if cargo-auditable on (LP: #2144353)
+
+ -- Max Gilmour <max.gilmour@canonical.com>  Fri, 13 Mar 2026 11:57:29 -0700
+
 rustc-1.93 (1.93.1+dfsg-0ubuntu3) resolute; urgency=medium
 
   * d/bin/cargo.in: Handle if UBUNTU_ENABLE_CARGO_AUDITABLE is unset
