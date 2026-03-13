@@ -1,0 +1,2 @@
+  * d/bin/cargo.in: Handle if UBUNTU_ENABLE_CARGO_AUDITABLE is unset
+    (LP: #2144045)
