@@ -1,3 +1,9 @@
+rustc-1.93 (1.93.1+dfsg-0ubuntu5) resolute; urgency=medium
+
+  * d/p/upstream/u-tar-cve-2026-33056: Fix vulnerability (LP: #2145764)
+
+ -- Max Gilmour <max.gilmour@canonical.com>  Mon, 23 Mar 2026 14:54:06 -0700
+
 rustc-1.93 (1.93.1+dfsg-0ubuntu4) resolute; urgency=medium
 
   * d/b/cargo.in: Only generate sboms if cargo-auditable on (LP: #2144353)

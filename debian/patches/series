@@ -41,3 +41,4 @@ build/d-bootstrap-tests-restrict-defaults.patch
 ubuntu/ubuntu-s390x-min-arch.patch
 ubuntu/ubuntu-allow-stable-miri.patch
 ubuntu/ubuntu-miri-no-native-lib.patch
+upstream/u-tar-cve-2026-33056.patch
