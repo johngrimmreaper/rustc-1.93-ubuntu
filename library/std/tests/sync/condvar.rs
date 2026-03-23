@@ -563,6 +563,7 @@ fn nonpoison_timeout_nanoseconds() {
     })
 }
 
+#[cfg(not(target_arch = "powerpc"))]
 #[test]
 #[cfg_attr(not(panic = "unwind"), ignore = "test requires unwinding support")]
 fn test_arc_condvar_poison() {
