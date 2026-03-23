@@ -6,5 +6,5 @@ assert-css: (".variants > .docblock", {"margin": "0px 0px 32px 24px"})
 
 assert-css: (
     "details.non-exhaustive > summary",
-    {"font-family": '"Fira Sans", Arial, NanumBarunGothic, sans-serif'},
+    {"font-family": '"Fira Sans", Arial, sans-serif'},
 )
