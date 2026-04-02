@@ -76,6 +76,9 @@ import sys
 FLAGS = "CFLAGS CXXFLAGS CPPFLAGS LDFLAGS"
 ARCHES = "DEB_HOST_GNU_TYPE DEB_HOST_RUST_TYPE"
 SYSTEM_REGISTRY = "/usr/share/cargo/registry"
+# RUST_VERSION gets replaced with the actual Rust version during
+# preconfiguration
+CARGO_PATH = "/usr/lib/rust-@RUST_VERSION@/bin/cargo"
 
 def log(*args):
     print("debian cargo wrapper:", *args, file=sys.stderr, flush=True)
@@ -181,7 +184,7 @@ def install(destdir, cratespec, host_rust_type, crate_in_registry, install_prefi
         # set CARGO_TARGET_DIR so build products are saved in target/
         # normally `cargo install` deletes them when it exits
         "CARGO_TARGET_DIR=" + sourcepath("target"),
-        "/usr/bin/cargo"] + list(args) +
+        CARGO_PATH] + list(args) +
         ([crate, "--vers", version] if crate_in_registry else ["--path", sourcepath()]) +
         ["--root", install_target], check=True)
     logrun(["rm", "-f", "%s/.crates.toml" % install_target])
@@ -199,7 +202,7 @@ def install(destdir, cratespec, host_rust_type, crate_in_registry, install_prefi
 def main(*args):
     cargo_home = os.getenv("CARGO_HOME", "")
     if not cargo_home.endswith("/debian/cargo_home"):
-        os.execv("/usr/lib/rust-@RUST_VERSION@/bin/cargo", ["cargo"] + list(args))
+        os.execv(CARGO_PATH, ["cargo"] + list(args))
 
     if any(f not in os.environ for f in FLAGS.split()):
         raise ValueError("not all of %s set; did you call dpkg-buildflags?" % FLAGS)
@@ -289,7 +292,7 @@ def main(*args):
         newargs.extend(["--config", "profile.release.lto = false"])
 
     if subcmd == "clean":
-        logrun(["env", "RUST_BACKTRACE=1", "/usr/bin/cargo"] + list(newargs), check=True)
+        logrun(["env", "RUST_BACKTRACE=1", CARGO_PATH] + list(newargs), check=True)
         if os.path.exists(cargo_home):
             shutil.rmtree(cargo_home)
         return 0
@@ -306,7 +309,7 @@ def main(*args):
             os.getenv("DEB_CARGO_INSTALL_PREFIX", "/usr"),
             *newargs)
     else:
-        return logrun(["env", "RUST_BACKTRACE=1", "/usr/bin/cargo"] + list(newargs)).returncode
+        return logrun(["env", "RUST_BACKTRACE=1", CARGO_PATH] + list(newargs)).returncode
 
 if __name__ == "__main__":
     sys.exit(main(*sys.argv[1:]))
