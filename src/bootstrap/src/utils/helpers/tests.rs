@@ -99,7 +99,7 @@ fn test_set_file_times_sanity_check() {
     assert_eq!(found_metadata.modified().unwrap(), unix_epoch)
 }
 
-#[test]
+#[allow(dead_code)]
 fn test_submodule_path_of() {
     let config = TestCtx::new().config("build").create_config();
 

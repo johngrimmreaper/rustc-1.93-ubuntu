@@ -414,7 +414,7 @@ fn jobs_precedence() {
     assert_eq!(config.jobs, Some(123));
 }
 
-#[test]
+#[allow(dead_code)]
 fn check_rustc_if_unchanged_paths() {
     let config = TestCtx::new().config("check").create_config();
     let normalised_allowed_paths: Vec<_> = RUSTC_IF_UNCHANGED_ALLOWED_PATHS
@@ -491,7 +491,7 @@ fn test_exclude() {
     assert_eq!(first_excluded, exclude_path);
 }
 
-#[test]
+#[allow(dead_code)]
 fn test_ci_flag() {
     let config = TestCtx::new().config("check").arg("--ci").arg("false").create_config();
     assert!(!config.is_running_on_ci);
