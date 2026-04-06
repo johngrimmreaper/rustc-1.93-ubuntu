@@ -405,7 +405,7 @@ Note that neither declarative nor procedural macros support doc comment tokens
 their equivalent `#[doc = r"str"]` attributes when passed to macros.
 
 [Attribute macros]: #the-proc_macro_attribute-attribute
-[Cargo's build scripts]: ../cargo/reference/build-scripts.html
+[Cargo's build scripts]: ../../../cargo/book/reference/build-scripts.html
 [Derive macros]: macro.proc.derive
 [Function-like macros]: #the-proc_macro-attribute
 [`$crate`]: macro.decl.hygiene.crate
