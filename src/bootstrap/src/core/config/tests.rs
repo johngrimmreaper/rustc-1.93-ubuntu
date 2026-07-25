@@ -34,6 +34,9 @@ fn get_toml(file: &Path) -> Result<TomlConfig, toml::de::Error> {
 
 #[test]
 fn download_ci_llvm() {
+    // Debian: this will attempt to download LLVM
+    return;
+
     let config = TestCtx::new().config("check").create_config();
     assert!(!config.llvm_from_ci);
 
