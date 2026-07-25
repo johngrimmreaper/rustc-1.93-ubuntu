@@ -17,7 +17,6 @@ members = [
   "src/tools/coverage-dump",
   "src/tools/features-status-dump",
   "src/tools/generate-copyright",
-  "src/tools/generate-windows-sys",
   "src/tools/html-checker",
   "src/tools/jsondocck",
   "src/tools/jsondoclint",
@@ -54,6 +53,9 @@ exclude = [
   "tests/rustdoc-gui",
   # HACK(eddyb) This hardcodes the fact that our CI uses `/checkout/obj`.
   "obj",
+  # dh-cargo-vendored-sources needs to be able to run cargo metadata on
+  # vendored crates
+  "vendor/",
 ]
 
 [profile.release.package.rustc_thread_pool]
