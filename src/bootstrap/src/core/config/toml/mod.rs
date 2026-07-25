@@ -152,6 +152,37 @@ impl Config {
     }
 
     pub(crate) fn get_toml(file: &Path) -> Result<TomlConfig, toml::de::Error> {
+        #[cfg(test)]
+        if file.exists() {
+            // Ubuntu: Normally, tests would simply get the default toml. However, some of the
+            // default values are impossible given our toolchain configuration. Therefore, we must
+            // cherry-pick select bootstrap configuration options from bootstrap.toml to prevent
+            // certain tests from failing.
+            return Self::get_toml_inner(file)
+                .map(|toml| {
+                    // We start with the default config that would be normally returned in a test
+                    // config, then cherry-pick only certain values from the actual bootstrap.toml,
+                    // keeping things as similar to the original test configuration as possible.
+                    let mut test_toml = TomlConfig::default();
+
+                    if let Some(build) = toml.build {
+                        test_toml.build = Some(Build {
+                            // Since we don't have a vendored LLVM, we don't have a compiler-rt source,
+                            // meaning optimizing compiler builtins is impossible.
+                            optimized_compiler_builtins: build.optimized_compiler_builtins,
+                            ..Default::default()
+                        });
+                    }
+
+                    test_toml
+                });
+        } else {
+            // Some tests, not expecting to actually read a toml, give a path that doesn't exist.
+            // If they do this, then simply return the default toml.
+            return Ok(TomlConfig::default());
+        }
+
+        #[cfg(not(test))]
         Self::get_toml_inner(file)
     }
 
