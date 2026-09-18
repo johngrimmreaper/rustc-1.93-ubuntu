@@ -12,7 +12,6 @@ Rules-Requires-Root: no
 Build-Depends:
  debhelper (>= 9),
  debhelper-compat (= 13),
- dh-cargo (>= 28ubuntu1~),
  dpkg-dev (>= 1.17.14),
  python3:native,
  cargo-1.92 | cargo-1.93 <!pkg.rustc.dlstage0>,
